@@ -1,15 +1,28 @@
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const userEmail = document.getElementById("userEmail");
 const logoutBtn = document.getElementById("logoutBtn");
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
 
-    if (user) {
-        userEmail.innerText = "Email: " + user.email;
-    } else {
+    if (!user) {
         window.location.href = "login.html";
+        return;
+    }
+
+    const docRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+
+        userEmail.innerHTML = `
+            <h3>Welcome ${data.name}</h3>
+            <p>Email: ${data.email}</p>
+            <p>Balance: ৳${data.balance}</p>
+        `;
     }
 
 });
